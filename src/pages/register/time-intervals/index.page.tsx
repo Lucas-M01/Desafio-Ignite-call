@@ -21,6 +21,8 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { getWeekDays } from '@/utils/get-week-days'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { convertTimeStringToMinutes } from '@/utils/convert-time-string-to-minutes'
+import { api } from '@/lib/axios'
+import { useRouter } from 'next/router'
 
 const timeIntervalsFormSchema = z.object({
   intervals: z
@@ -42,7 +44,7 @@ const timeIntervalsFormSchema = z.object({
         return {
           weekDay: interval.weekDay,
           startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
-          endTimeTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
+          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
         }
       })
     })
@@ -50,7 +52,7 @@ const timeIntervalsFormSchema = z.object({
       (intervals) => {
         return intervals.every(
           (interval) =>
-            interval.endTimeTimeInMinutes - 60 >= interval.startTimeInMinutes,
+            interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
         )
       },
       {
@@ -85,6 +87,8 @@ export default function TimeIntervals() {
     },
   })
 
+  const router = useRouter()
+
   const weekDays = getWeekDays()
 
   const { fields } = useFieldArray({
@@ -94,12 +98,14 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals(data: TimeIntervalsFormInput) {
-    console.log(data)
-    // await api.post('/users/time-intervals', {
-    //   intervals: data.intervals.filter((interval) => interval.enabled),
-    // })
-    // router.push('/register/update-profile')
+  async function handleSetTimeIntervals(data: any) {
+    const { intervals } = data as TimeIntervalsFormOutput
+
+    await api.post('/users/time-intervals', {
+      intervals,
+    })
+
+    await router.push('/register/update-profile')
   }
 
   return (
